@@ -47,6 +47,7 @@ class CV_Measurement_Assistant_App( QtWidgets.QWidget, Ui_MainWindow, Saveable_S
 
 		Saveable_Session.__init__( self, text_boxes = [(self.user_lineEdit, "user"),(self.descriptionFilePath_lineEdit, "pad_description_path"),(self.sampleName_lineEdit, "sample_name"),
 					   (self.startVoltage_lineEdit, "start_v"),(self.endVoltage_lineEdit, "end_v"), (self.stepVoltage_lineEdit, "step_v"),
+					   (self.acVoltage_lineEdit, "ac_voltage_V"), (self.acFrequency_lineEdit, "ac_frequency_Hz"),
 					   (self.startTemp_lineEdit, "start_T"),(self.endTemp_lineEdit, "end_T"), (self.stepTemp_lineEdit, "step_T")] )
 
 		self.Init_Subsystems()
@@ -96,9 +97,13 @@ class CV_Measurement_Assistant_App( QtWidgets.QWidget, Ui_MainWindow, Saveable_S
 		self.clearGraph_pushButton.clicked.connect( self.graph.clear_all_plots )
 
 		self.measurementRequested_signal.connect( self.cv_controller.Voltage_Sweep )
-		self.cv_controller.newSweepStarted_signal.connect( self.graph.new_plot )
-		self.cv_controller.dataPointGotten_signal.connect( self.graph.add_new_data_point )
-		self.cv_controller.sweepFinished_signal.connect( self.graph.plot_finished )
+		# self.cv_controller.newSweepStarted_signal.connect( self.graph.new_plot )
+		# self.cv_controller.dataPointGotten_signal.connect( self.graph.add_new_data_point )
+		def plot_results( bias_voltage_V, capacitance_F, Q_Data ):
+			self.graph.plot( "C-V", bias_voltage_V, capacitance_F )
+			self.graph.plot( r"$1/C^2-V$", bias_voltage_V, 1 / capacitance_F**2, axis=1 )
+			# self.graph.plot( r"$(\frac{d(1/C^2)}{dV})-V$", (bias_voltage_V[:-1] + bias_voltage_V[1:])/2, np.diff( 1 / capacitance_F**2 ) / np.diff( bias_voltage_V ), axis=1 )
+		self.cv_controller.sweepFinished_signal.connect( plot_results )
 		self.cv_controller.Error_signal.connect( self.Error_During_Measurement )
 
 		# Temperature controller stuff
@@ -180,8 +185,8 @@ class CV_Measurement_Assistant_App( QtWidgets.QWidget, Ui_MainWindow, Saveable_S
 		self.takeMeasurementSweep_pushButton.setStyleSheet("QPushButton { background-color: rgba(0,255,0,255); color: rgba(0, 0, 0,255); }")
 		self.takeMeasurementSweep_pushButton.clicked.connect( self.Start_Measurement )
 
-	def Set_Current_Data( self, x_data, y_data ):
-		self.current_data = ( x_data, y_data )
+	def Set_Current_Data( self, bias_V, capacitance_F, Q ):
+		self.current_data = ( bias_V, capacitance_F, Q )
 		self.cv_controller.sweepFinished_signal.disconnect( self.Set_Current_Data )
 
 	def Take_Single_Measurement( self ):
@@ -191,6 +196,7 @@ class CV_Measurement_Assistant_App( QtWidgets.QWidget, Ui_MainWindow, Saveable_S
 		ac_voltage = float( self.acVoltage_lineEdit.text() )
 		ac_frequency = float( self.acFrequency_lineEdit.text() )
 		step_delay = float( self.stepDelay_lineEdit.text() )
+		self.Save_Session( resource_path( "session.ini" ) )
 
 		self.cv_controller.sweepFinished_signal.connect( self.Set_Current_Data )
 		self.measurementRequested_signal.emit( input_start, input_end, input_step, ac_voltage, ac_frequency, step_delay )
@@ -206,8 +212,8 @@ class CV_Measurement_Assistant_App( QtWidgets.QWidget, Ui_MainWindow, Saveable_S
 		file_name = "CV Data_" + sample_name + "_" + timestr + ".csv"
 		print( "Saving File: " + file_name )
 		with open( file_name, 'w' ) as outfile:
-			for x,y in zip( self.current_data[0], self.current_data[1] ):
-				outfile.write( f'{x},{y}\n' )
+			for bias_V,capacitance_F,Q in zip( *self.current_data ):
+				outfile.write( f'{bias_V},{capacitance_F},{Q}\n' )
 
 	def Save_Data_To_Database( self ):
 		if self.current_data == None:

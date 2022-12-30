@@ -16,7 +16,7 @@ from PyQt5 import QtCore
 class CV_Controller( QtCore.QObject ):
 	newSweepStarted_signal = QtCore.pyqtSignal()
 	dataPointGotten_signal = QtCore.pyqtSignal(float, float)
-	sweepFinished_signal = QtCore.pyqtSignal(np.ndarray, np.ndarray, np.ndarray)
+	sweepFinished_signal = QtCore.pyqtSignal(np.ndarray, np.ndarray, np.ndarray) # bias_voltage_V, capacitance_F, Q_Data
 
 	Device_Connected = QtCore.pyqtSignal(str,str)
 	Device_Disconnected = QtCore.pyqtSignal(str,str)
@@ -45,7 +45,7 @@ class CV_Controller( QtCore.QObject ):
 				self.Error_signal.emit( "CV controller not connected" )
 				return
 			try:
-				print( f"Check_Connection_Then_Run = {func}" )
+				# print( f"Check_Connection_Then_Run = {func}" )
 				return func( *args, **kargs )
 			except Exception as e:
 				self.Device_Disconnected.emit( self.machine_type, self.supported_devices[ self.machine_type ][0] )
@@ -81,7 +81,7 @@ class CV_Controller( QtCore.QObject ):
 
 
 	def Close_Connection( self ):
-		print( f"Closing connection with CV Controller {self.supported_devices[ self.machine_type ][1]}" )
+		# print( f"Closing connection with CV Controller {self.supported_devices[ self.machine_type ][1]}" )
 		if self.gpib_resource == None:
 			return
 		self.gpib_resource.close()

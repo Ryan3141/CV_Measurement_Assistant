@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>880</width>
-    <height>834</height>
+    <height>883</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <widget class="Live_Graph" name="graph" native="true"/>
+    <widget class="Graph" name="graph" native="true"/>
    </item>
    <item>
     <widget class="QFrame" name="frame">
@@ -498,9 +498,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Live_Graph</class>
+   <class>Graph</class>
    <extends>QWidget</extends>
-   <header>MPL_Shared.Live_Graph.h</header>
+   <header>MPL_Shared.Matplotlib_Qt.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
